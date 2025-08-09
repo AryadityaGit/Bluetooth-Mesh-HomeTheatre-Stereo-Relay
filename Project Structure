@@ -1,0 +1,12 @@
+multi-speaker-sync/
+├── index.html         # Host controller
+├── peer.html          # Peer speaker page
+├── js/
+│   ├── host.js        # WebRTC + audio stream logic for host
+│   ├── peer.js        # Peer connection and playback
+│   └── qr.js          # QR code generation and scanning
+├── assets/
+│   └── logo.png       # Optional branding
+├── css/
+│   └── style.css      # Shared styles
+├── README.md          # Setup instructions
