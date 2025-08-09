@@ -1,142 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Bluetooth Music Controller</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #111;
-      color: #fff;
-      text-align: center;
-      padding: 2rem;
-    }
-    input, button, select {
-      margin: 1rem;
-      padding: 0.5rem;
-      font-size: 1rem;
-    }
-    .controls {
-      margin-top: 2rem;
-    }
-  </style>
+  <title>Multi-Speaker Host</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <h1>🎶 Bluetooth Music Controller</h1>
-  <input type="file" id="audioFile" accept="audio/*" />
-  <div class="controls">
-    <button id="playBtn">▶️ Play</button>
-    <button id="pauseBtn">⏸️ Pause</button>
-    <label for="channelSelect">Stereo Channel:</label>
-    <select id="channelSelect">
-      <option value="stereo">Stereo</option>
-      <option value="left">Left Only</option>
-      <option value="right">Right Only</option>
-      <option value="mono">Mono</option>
-    </select>
-    <label for="volumeControl">Volume:</label>
-    <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="1" />
-  </div>
-
-  <script>
-    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    let sourceNode, gainNode, splitter, merger;
-    let audioElement = new Audio();
-    let fileInput = document.getElementById('audioFile');
-    let playBtn = document.getElementById('playBtn');
-    let pauseBtn = document.getElementById('pauseBtn');
-    let channelSelect = document.getElementById('channelSelect');
-    let volumeControl = document.getElementById('volumeControl');
-
-    fileInput.addEventListener('change', function () {
-      let file = this.files[0];
-      if (file) {
-        let url = URL.createObjectURL(file);
-        audioElement.src = url;
-        audioElement.load();
-        setupAudioGraph();
-      }
-    });
-
-    function setupAudioGraph() {
-      sourceNode = audioCtx.createMediaElementSource(audioElement);
-      gainNode = audioCtx.createGain();
-      splitter = audioCtx.createChannelSplitter(2);
-      merger = audioCtx.createChannelMerger(2);
-
-      sourceNode.connect(splitter);
-
-      updateChannelRouting();
-
-      merger.connect(gainNode).connect(audioCtx.destination);
-    }
-
-    function updateChannelRouting() {
-      let choice = channelSelect.value;
-      splitter.disconnect();
-      merger.disconnect();
-
-      if (choice === 'stereo') {
-        splitter.connect(merger, 0, 0); // Left
-        splitter.connect(merger, 1, 1); // Right
-      } else if (choice === 'left') {
-        splitter.connect(merger, 0, 0);
-        splitter.connect(merger, 0, 1);
-      } else if (choice === 'right') {
-        splitter.connect(merger, 1, 0);
-        splitter.connect(merger, 1, 1);
-      } else if (choice === 'mono') {
-        splitter.connect(merger, 0, 0);
-        splitter.connect(merger, 0, 1);
-      }
-
-      merger.connect(gainNode).connect(audioCtx.destination);
-    }
-
-    channelSelect.addEventListener('change', updateChannelRouting);
-
-    playBtn.addEventListener('click', () => {
-      audioCtx.resume();
-      audioElement.play();
-    });
-
-    pauseBtn.addEventListener('click', () => {
-      audioElement.pause();
-    });
-
-    volumeControl.addEventListener('input', () => {
-      if (gainNode) {
-        gainNode.gain.value = volumeControl.value;
-      }
-    });
-  </script>
-<script>
-  let peers = [];
-  let peerConnections = [];
-
-  // Setup WebRTC signaling (simplified for demo)
-  async function setupPeerConnection(peerId) {
-    let pc = new RTCPeerConnection();
-    peerConnections.push(pc);
-
-    // Send audio stream to peer
-    let stream = audioElement.captureStream();
-    stream.getTracks().forEach(track => pc.addTrack(track, stream));
-
-    // Create offer and send to peer (via QR or manual input)
-    let offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-
-    // Display offer as QR code or text
-    console.log(`Offer for ${peerId}:`, offer.sdp);
-    // You can use a QR code library to show this visually
-  }
-
-  // Call this when a new peer joins
-  function addPeer(peerId) {
-    setupPeerConnection(peerId);
-  }
-</script>
+  <h1>🎶 Host Controller</h1>
+  <audio id="audio" controls src="your-audio.mp3"></audio>
+  <button onclick="startSync()">Start Sync</button>
+  <div id="qrContainer"></div>
+  <script src="js/host.js"></script>
+  <script src="js/qr.js"></script>
 </body>
 </html>
