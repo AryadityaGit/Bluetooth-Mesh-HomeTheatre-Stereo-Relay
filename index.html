@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bluetooth Music Controller</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #fff;
+      text-align: center;
+      padding: 2rem;
+    }
+    input, button, select {
+      margin: 1rem;
+      padding: 0.5rem;
+      font-size: 1rem;
+    }
+    .controls {
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎶 Bluetooth Music Controller</h1>
+  <input type="file" id="audioFile" accept="audio/*" />
+  <div class="controls">
+    <button id="playBtn">▶️ Play</button>
+    <button id="pauseBtn">⏸️ Pause</button>
+    <label for="channelSelect">Stereo Channel:</label>
+    <select id="channelSelect">
+      <option value="stereo">Stereo</option>
+      <option value="left">Left Only</option>
+      <option value="right">Right Only</option>
+      <option value="mono">Mono</option>
+    </select>
+    <label for="volumeControl">Volume:</label>
+    <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="1" />
+  </div>
+
+  <script>
+    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let sourceNode, gainNode, splitter, merger;
+    let audioElement = new Audio();
+    let fileInput = document.getElementById('audioFile');
+    let playBtn = document.getElementById('playBtn');
+    let pauseBtn = document.getElementById('pauseBtn');
+    let channelSelect = document.getElementById('channelSelect');
+    let volumeControl = document.getElementById('volumeControl');
+
+    fileInput.addEventListener('change', function () {
+      let file = this.files[0];
+      if (file) {
+        let url = URL.createObjectURL(file);
+        audioElement.src = url;
+        audioElement.load();
+        setupAudioGraph();
+      }
+    });
+
+    function setupAudioGraph() {
+      sourceNode = audioCtx.createMediaElementSource(audioElement);
+      gainNode = audioCtx.createGain();
+      splitter = audioCtx.createChannelSplitter(2);
+      merger = audioCtx.createChannelMerger(2);
+
+      sourceNode.connect(splitter);
+
+      updateChannelRouting();
+
+      merger.connect(gainNode).connect(audioCtx.destination);
+    }
+
+    function updateChannelRouting() {
+      let choice = channelSelect.value;
+      splitter.disconnect();
+      merger.disconnect();
+
+      if (choice === 'stereo') {
+        splitter.connect(merger, 0, 0); // Left
+        splitter.connect(merger, 1, 1); // Right
+      } else if (choice === 'left') {
+        splitter.connect(merger, 0, 0);
+        splitter.connect(merger, 0, 1);
+      } else if (choice === 'right') {
+        splitter.connect(merger, 1, 0);
+        splitter.connect(merger, 1, 1);
+      } else if (choice === 'mono') {
+        splitter.connect(merger, 0, 0);
+        splitter.connect(merger, 0, 1);
+      }
+
+      merger.connect(gainNode).connect(audioCtx.destination);
+    }
+
+    channelSelect.addEventListener('change', updateChannelRouting);
+
+    playBtn.addEventListener('click', () => {
+      audioCtx.resume();
+      audioElement.play();
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      audioElement.pause();
+    });
+
+    volumeControl.addEventListener('input', () => {
+      if (gainNode) {
+        gainNode.gain.value = volumeControl.value;
+      }
+    });
+  </script>
+</body>
+</html>
