@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Peer Speaker</title>
+</head>
+<body>
+  <h2>🔊 Peer Speaker</h2>
+  <textarea id="offerInput" placeholder="Paste Host Offer SDP"></textarea>
+  <button onclick="connect()">Connect</button>
+  <script>
+    async function connect() {
+      let pc = new RTCPeerConnection();
+      pc.ontrack = (event) => {
+        let audio = document.createElement('audio');
+        audio.srcObject = event.streams[0];
+        audio.autoplay = true;
+        document.body.appendChild(audio);
+      };
+
+      let offerSDP = document.getElementById('offerInput').value;
+      await pc.setRemoteDescription({ type: 'offer', sdp: offerSDP });
+      let answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+
+      // Send answer back to host manually or via QR
+      console.log('Answer SDP:', answer.sdp);
+    }
+  </script>
+</body>
+</html>
