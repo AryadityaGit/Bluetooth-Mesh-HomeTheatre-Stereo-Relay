@@ -111,5 +111,32 @@
       }
     });
   </script>
+<script>
+  let peers = [];
+  let peerConnections = [];
+
+  // Setup WebRTC signaling (simplified for demo)
+  async function setupPeerConnection(peerId) {
+    let pc = new RTCPeerConnection();
+    peerConnections.push(pc);
+
+    // Send audio stream to peer
+    let stream = audioElement.captureStream();
+    stream.getTracks().forEach(track => pc.addTrack(track, stream));
+
+    // Create offer and send to peer (via QR or manual input)
+    let offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    // Display offer as QR code or text
+    console.log(`Offer for ${peerId}:`, offer.sdp);
+    // You can use a QR code library to show this visually
+  }
+
+  // Call this when a new peer joins
+  function addPeer(peerId) {
+    setupPeerConnection(peerId);
+  }
+</script>
 </body>
 </html>
